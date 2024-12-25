@@ -63,20 +63,21 @@ EXEC ThemNhanVien
     @MaChucVu = 'CV1',
     @NgayVaoLam = '2023-12-01';
 
-create function TimKiemKhoHang
-	(@MaKhoHang nvarchar(3), @TenKhoHang nvarchar(30), @MaNhanVienPhuTrach nvarchar(5))
-returns table
-as return 
-	(select MaKhoHang, TenKhoHang, MaNhanVienPhuTrach FROM KhoHang_1
-	inner join NhanVien_9 on KhoHang_1.MaNhanVienPhuTrach = NhanVien_9.MaNhanVien
-	where
-		(MaKhoHang LIKE '%' + @MaKhoHang + '%' OR @MaKhoHang IS NULL)
-		and (TenKhoHang LIKE '%' + @TenKhoHang + '%' OR @TenKhoHang IS NULL)
-		and (MaNhanVienPhuTrach LIKE '%' + @MaNhanVienPhuTrach + '%' OR @MaNhanVienPhuTrach IS NULL));
+CREATE FUNCTION TimKiemKhoHang1
+    (@KeyWord nvarchar(40))
+RETURNS TABLE
+AS RETURN 
+    (SELECT MaKhoHang, TenKhoHang, MaNhanVienPhuTrach 
+     FROM KhoHang_1
+     INNER JOIN NhanVien_9 ON KhoHang_1.MaNhanVienPhuTrach = NhanVien_9.MaNhanVien
+     WHERE MaKhoHang LIKE '%' + @KeyWord + '%'
+        OR TenKhoHang LIKE '%' + @KeyWord + '%'
+        OR MaNhanVienPhuTrach LIKE '%' + @KeyWord + '%'
+    );
 
-select * from TimKiemKhoHang('KH1', NULL, NULL);
-select * from TimKiemKhoHang(NULL, 'Central', NULL);
-select * from TimKiemKhoHang(NULL, NULL, NULL);
+SELECT *
+FROM TimKiemKhoHang1(N'C');
+
 
 create procedure ThemChucVu
 	@MaChucVu nvarchar(3), @TenChucVu nvarchar(30), @MucLuong float, @PhuCap float
@@ -105,6 +106,8 @@ as begin
 		raiserror(@Loi, 16, 1)
 end
 
+drop procedure SuaChucVu
+
 create procedure SuaChucVu
 	@MaChucVu nvarchar(3), @TenChucVu nvarchar(30), @MucLuong float, @PhuCap float
 as begin
@@ -116,7 +119,7 @@ as begin
 	if @Dem = 0
 		set @Loi = N'Ma chuc vu khong he ton tai'
 
-	set @Dem = (select count(*) from ChucVu_2 where TenChucVu = @TenChucVu)
+	set @Dem = (select count(*) from ChucVu_2 where TenChucVu = @TenChucVu AND MaChucVu !=  @MaChucVu)
 	if @Dem > 0
 		set @Loi = N'Ten chuc vu nay da ton tai'
 	
@@ -180,4 +183,4 @@ RETURN
 )
 
 drop function TimKiemChucVu
-select * from TimKiemChucVu(NULL, NULL, NULL, NULL);
+select * from TimKiemChucVu(NULL, 'Tester', NULL, NULL);
